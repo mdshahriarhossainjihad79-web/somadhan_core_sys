@@ -1,0 +1,687 @@
+import { useState, useEffect, useMemo } from "react";
+import { Icon } from "@iconify/react";
+import { usePage } from "@inertiajs/react";
+import MultiplePaymentModal from "./MultiplePaymentModal";
+import useInput from "../../hook/useInput";
+import usePosSettings from "../../hook/usePosSettings";
+import ThreeDotMenu from "../../components/ThreeDotMenu";
+
+const BillingSection = ({ rows = [], selectedCustomer }) => {
+    const { props } = usePage();
+    const { banks, setting, taxes } = props;
+
+    const { billingMenuFields, handleFieldChange, settings } = usePosSettings();
+    const { showDiscount, showTax } = settings;
+
+    const bankOptions = useMemo(() => {
+        return banks.map((bank) => ({
+            label: bank.name,
+            value: bank.id,
+        }));
+    }, [banks]);
+
+    const [discountType, setDiscountType] = useState("%");
+    const [tax, setTax] = useState("");
+    const [previousDue, setPreviousDue] = useState(0);
+    const [paymentMethod, setPaymentMethod] = useState(null);
+    const [productTotal, setProductTotal] = useState(0);
+    const [subTotal, setSubTotal] = useState(0);
+    const [advanceDue, setAdvanceDue] = useState(0);
+    const [isRoundTotal, setIsRoundTotal] = useState(false);
+    const [isPayFull, setIsPayFull] = useState(false);
+
+    const [discount, handleDiscountChange, setDiscount] = useInput("", {
+        min: 0,
+        max: discountType === "%" ? 100 : undefined,
+        type: "number",
+    });
+    const [payAmount, handlePayAmountChange, setPayAmount] = useInput("", {
+        min: 0,
+        type: "number",
+    });
+
+    // Update previousDue when selectedCustomer changes
+    useEffect(() => {
+        const walletBalance = parseFloat(selectedCustomer?.wallet_balance) || 0;
+        setPreviousDue(walletBalance);
+    }, [selectedCustomer]);
+
+    // Calculate product total from rows
+    useEffect(() => {
+        // console.log("Rows:", rows); // Debugging
+        const total = rows.reduce((sum, row) => {
+            const rowTotal = parseFloat(row.total) || 0; // Ensure row.total is a number
+            // console.log("Row Total:", rowTotal); // Debugging
+            return sum + rowTotal;
+        }, 0);
+        setProductTotal(total); // Ensure total is a number
+        // console.log("Product Total:", total, "Type:", typeof total); // Debugging
+    }, [rows]);
+
+    // Calculate sub total and advance/due
+    useEffect(() => {
+        const discountValue =
+            discountType === "%"
+                ? ((parseFloat(discount) || 0) * productTotal) / 100
+                : parseFloat(discount) || 0;
+        const calculatedTotalWithDiscountAmount = productTotal - discountValue;
+        const taxValue =
+            ((parseFloat(tax) || 0) * calculatedTotalWithDiscountAmount) / 100;
+        const totalWithTaxAmount = calculatedTotalWithDiscountAmount + taxValue;
+        // console.log("totalWithTaxAmount", totalWithTaxAmount);
+        // console.log("previousDue", previousDue);
+        const totalWithPreviousDue =
+            totalWithTaxAmount +
+            (setting?.invoice_payment !== 1 ? parseFloat(previousDue) || 0 : 0);
+        setSubTotal(totalWithPreviousDue);
+
+        const calculatedAdvanceDue =
+            totalWithPreviousDue - (parseFloat(payAmount) || 0);
+        setAdvanceDue(calculatedAdvanceDue);
+    }, [productTotal, discount, discountType, tax, previousDue, payAmount]);
+
+    const handleDiscountTypeChange = (e) => {
+        setDiscountType(e.target.value);
+        if (discountType === "৳") {
+            setDiscount(""); // Clear discount input when type changes
+        }
+    };
+
+    // Handle Pay Full checkbox change
+    useEffect(() => {
+        if (isPayFull) {
+            setPayAmount(
+                isRoundTotal
+                    ? Math.round(subTotal)
+                    : Number(subTotal).toFixed(2)
+            );
+        } else {
+            setPayAmount("");
+        }
+    }, [isPayFull, subTotal, isRoundTotal, setPayAmount]);
+
+    const handlePayClick = () => {
+        // Handle Pay button logic (e.g., API call)
+        console.log("Pay button clicked", {
+            rows,
+            discount,
+            tax,
+            previousDue,
+            payAmount,
+            paymentMethod,
+        });
+    };
+
+    const handleDraftClick = () => {
+        // Handle Draft button logic (e.g., save as draft)
+        console.log("Draft button clicked", {
+            rows,
+            discount,
+            tax,
+            previousDue,
+            payAmount,
+            paymentMethod,
+        });
+    };
+
+    // multiple payment system manage
+    const multiplePaymentMethod = 1;
+    const [multiplePaymentModal, setMultiplePaymentModal] = useState(false);
+    const handleMultiplePayment = () => {
+        setMultiplePaymentModal(true);
+    };
+    const handleMultiplePaymentModalClose = () => {
+        setMultiplePaymentModal(false);
+    };
+
+    return (
+        <>
+            <div className="fixed bottom-0 left-0 w-full bg-surface-light dark:bg-surface-dark border-t border-gray-300 dark:border-gray-600 shadow-md z-10">
+                <div className="relative mx-auto px-4 sm:px-6 md:px-12 py-4 max-h-[350px] overflow-y-auto overflow-x-auto">
+                    {/* three dot menu  */}
+                    <div className="absolute top-1 right-1">
+                        <ThreeDotMenu
+                            fields={billingMenuFields}
+                            onFieldChange={handleFieldChange}
+                        />
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-5">
+                        {/* First Column: Product Total, Discount, Tax */}
+                        <div className="flex flex-col gap-3 md:border-r md:pr-5">
+                            <div className="flex items-center gap-2 min-w-[200px]">
+                                <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                    Product Total:
+                                </label>
+                                <input
+                                    type="text"
+                                    value={productTotal.toFixed(2)}
+                                    readOnly
+                                    className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                    aria-label="Product Total"
+                                />
+                            </div>
+                            {showDiscount && (
+                                <div className="flex items-center gap-2 min-w-[200px]">
+                                    <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                        Discount:
+                                    </label>
+                                    <div className="flex items-center w-full">
+                                        <input
+                                            type="number"
+                                            value={discount}
+                                            onChange={handleDiscountChange}
+                                            min={discountType === "%" ? 1 : 0}
+                                            max={
+                                                discountType === "%"
+                                                    ? 100
+                                                    : undefined
+                                            }
+                                            className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-surface-light dark:bg-surface-dark text-text dark:text-text-dark focus:ring-0 focus:border-primary dark:focus:border-primary-dark rounded-r-none"
+                                            placeholder="Enter discount"
+                                            aria-label="Discount"
+                                        />
+                                        <select
+                                            value={discountType}
+                                            onChange={handleDiscountTypeChange}
+                                            className="w-16 py-1 px-2 border border-gray-300 dark:border-gray-600 border-l-0 rounded-md rounded-l-none text-sm bg-surface-light dark:bg-surface-dark text-text dark:text-text-dark focus:ring-0 focus:border-primary dark:focus:border-primary-dark appearance-none"
+                                            aria-label="Discount Type"
+                                        >
+                                            <option value="%">%</option>
+                                            <option value="৳">৳</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+
+                            {showTax && (
+                                <div className="flex items-center gap-2 min-w-[200px]">
+                                    <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                        Tax (%):
+                                    </label>
+                                    <select
+                                        value={tax}
+                                        onChange={(e) => setTax(e.target.value)}
+                                        className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-surface-light dark:bg-surface-dark text-text dark:text-text-dark focus:ring-0 focus:border-primary dark:focus:border-primary-dark"
+                                        aria-label="Tax Percentage"
+                                    >
+                                        <option value="">Select Tax</option>
+                                        {taxes.map((tax, i) => (
+                                            <option
+                                                key={i}
+                                                value={tax.percentage}
+                                            >
+                                                {tax?.name ?? "N/A"} (
+                                                {tax?.percentage ?? 0})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            {!showDiscount && !showTax ? (
+                                <>
+                                    <div className="flex items-center gap-2 min-w-[200px]">
+                                        <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                            Previous Due:
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={previousDue}
+                                            onChange={(e) =>
+                                                setPreviousDue(e.target.value)
+                                            }
+                                            min="0"
+                                            className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                            placeholder="Enter previous due"
+                                            aria-label="Previous Due"
+                                            readOnly
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-2 min-w-[200px]">
+                                        <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                            Grand Total:
+                                        </label>
+                                        <div className="flex items-center gap-2 w-full">
+                                            <input
+                                                type="text"
+                                                value={
+                                                    isRoundTotal
+                                                        ? Math.round(subTotal)
+                                                        : Number(
+                                                              subTotal
+                                                          ).toFixed(2)
+                                                }
+                                                readOnly
+                                                className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                                aria-label="Grand Total"
+                                            />
+                                            <label className="flex items-center text-sm text-text dark:text-text-dark whitespace-nowrap">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isRoundTotal}
+                                                    onChange={(e) =>
+                                                        setIsRoundTotal(
+                                                            e.target.checked
+                                                        )
+                                                    }
+                                                    className="mr-1 h-4 w-4 text-primary dark:text-primary-dark border-gray-300 dark:border-gray-600 rounded focus:ring-primary dark:focus:ring-primary-dark transition-colors duration-200"
+                                                    aria-label="Round Grand Total"
+                                                />
+                                                Round
+                                            </label>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : !showDiscount || !showTax ? (
+                                <div className="flex items-center gap-2 min-w-[200px]">
+                                    <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                        Previous Due:
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={previousDue}
+                                        onChange={(e) =>
+                                            setPreviousDue(e.target.value)
+                                        }
+                                        min="0"
+                                        className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                        placeholder="Enter previous due"
+                                        aria-label="Previous Due"
+                                        readOnly
+                                    />
+                                </div>
+                            ) : null}
+                        </div>
+
+                        {/* Second Column: Previous Due, Grand Total, Pay Amount */}
+                        <div className="flex flex-col gap-3 md:border-r md:pr-5">
+                            {showDiscount && showTax ? (
+                                <>
+                                    <div className="flex items-center gap-2 min-w-[200px]">
+                                        <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                            Previous Due:
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={previousDue}
+                                            onChange={(e) =>
+                                                setPreviousDue(e.target.value)
+                                            }
+                                            min="0"
+                                            className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                            placeholder="Enter previous due"
+                                            aria-label="Previous Due"
+                                            readOnly
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-2 min-w-[200px]">
+                                        <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                            Grand Total:
+                                        </label>
+                                        <div className="flex items-center gap-2 w-full">
+                                            <input
+                                                type="text"
+                                                value={
+                                                    isRoundTotal
+                                                        ? Math.round(subTotal)
+                                                        : Number(
+                                                              subTotal
+                                                          ).toFixed(2)
+                                                }
+                                                readOnly
+                                                className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                                aria-label="Grand Total"
+                                            />
+                                            <label className="flex items-center text-sm text-text dark:text-text-dark whitespace-nowrap">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isRoundTotal}
+                                                    onChange={(e) =>
+                                                        setIsRoundTotal(
+                                                            e.target.checked
+                                                        )
+                                                    }
+                                                    className="mr-1 h-4 w-4 text-primary dark:text-primary-dark border-gray-300 dark:border-gray-600 rounded focus:ring-primary dark:focus:ring-primary-dark transition-colors duration-200"
+                                                    aria-label="Round Grand Total"
+                                                />
+                                                Round
+                                            </label>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : showDiscount || showTax ? (
+                                <div className="flex items-center gap-2 min-w-[200px]">
+                                    <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                        Previous Due:
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={previousDue}
+                                        onChange={(e) =>
+                                            setPreviousDue(e.target.value)
+                                        }
+                                        min="0"
+                                        className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                        placeholder="Enter previous due"
+                                        aria-label="Previous Due"
+                                        readOnly
+                                    />
+                                </div>
+                            ) : null}
+                            {/* {setting?.invoice_payment !== 1 && (
+                                <div className="flex items-center gap-2 min-w-[200px]">
+                                    <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                        Previous Due:
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={previousDue}
+                                        onChange={(e) =>
+                                            setPreviousDue(e.target.value)
+                                        }
+                                        min="0"
+                                        className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                        placeholder="Enter previous due"
+                                        aria-label="Previous Due"
+                                        readOnly
+                                    />
+                                </div>
+                            )}
+                            <div className="flex items-center gap-2 min-w-[200px]">
+                                <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                    Grand Total:
+                                </label>
+                                <div className="flex items-center gap-2 w-full">
+                                    <input
+                                        type="text"
+                                        value={
+                                            isRoundTotal
+                                                ? Math.round(subTotal)
+                                                : Number(subTotal).toFixed(2)
+                                        }
+                                        readOnly
+                                        className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                        aria-label="Grand Total"
+                                    />
+                                    <label className="flex items-center text-sm text-text dark:text-text-dark whitespace-nowrap">
+                                        <input
+                                            type="checkbox"
+                                            checked={isRoundTotal}
+                                            onChange={(e) =>
+                                                setIsRoundTotal(
+                                                    e.target.checked
+                                                )
+                                            }
+                                            className="mr-1 h-4 w-4 text-primary dark:text-primary-dark border-gray-300 dark:border-gray-600 rounded focus:ring-primary dark:focus:ring-primary-dark transition-colors duration-200"
+                                            aria-label="Round Grand Total"
+                                        />
+                                        Round
+                                    </label>
+                                </div>
+                            </div> */}
+                            <div className="flex items-center gap-2 min-w-[200px]">
+                                <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                    Pay Amount:
+                                </label>
+                                <div className="flex items-center gap-2 w-full">
+                                    <input
+                                        type="number"
+                                        value={payAmount}
+                                        onChange={handlePayAmountChange}
+                                        min="0"
+                                        className={`flex-1 py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-surface-light dark:bg-surface-dark text-text dark:text-text-dark focus:ring-0 focus:border-primary dark:focus:border-primary-dark`}
+                                        placeholder="Enter pay amount"
+                                        aria-label="Pay Amount"
+                                    />
+                                    <label className="flex items-center text-sm text-text dark:text-text-dark whitespace-nowrap">
+                                        <input
+                                            type="checkbox"
+                                            checked={isPayFull}
+                                            onChange={(e) =>
+                                                setIsPayFull(e.target.checked)
+                                            }
+                                            className="mr-1 h-4 w-4 text-primary dark:text-primary-dark border-gray-300 dark:border-gray-600 rounded focus:ring-primary dark:focus:ring-primary-dark transition-colors duration-200"
+                                            aria-label="Pay Full Amount"
+                                        />
+                                        Full
+                                    </label>
+                                </div>
+                            </div>
+
+                            {!showDiscount && !showTax ? (
+                                <>
+                                    <div className="flex items-center gap-2 min-w-[200px]">
+                                        <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                            {advanceDue > 0 ? "Due" : "Return"}{" "}
+                                            Amount:
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={advanceDue.toFixed(2)}
+                                            readOnly
+                                            className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                            aria-label="Advance or Due Amount"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-2 min-w-[200px]">
+                                        <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                            Payment Method:
+                                        </label>
+                                        <div className="flex items-center gap-2 w-full">
+                                            <select
+                                                className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-surface-light dark:bg-surface-dark text-text dark:text-text-dark focus:ring-0 focus:border-primary dark:focus:border-primary-dark"
+                                                onChange={(e) =>
+                                                    setPaymentMethod(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                value={paymentMethod || ""}
+                                                aria-label="Payment Method"
+                                            >
+                                                <option value="">
+                                                    Select Payment Method
+                                                </option>
+                                                {bankOptions.map((bank) => (
+                                                    <option
+                                                        key={bank?.value}
+                                                        value={bank?.value}
+                                                    >
+                                                        {bank?.label ?? "N/A"}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {multiplePaymentMethod === 1 && (
+                                                <button
+                                                    onClick={
+                                                        handleMultiplePayment
+                                                    }
+                                                    className="inline-flex items-center px-2 py-1 bg-primary dark:bg-primary-dark text-white rounded-sm hover:bg-primary-dark dark:hover:bg-primary focus:ring-0 focus:ring-primary dark:focus:ring-primary-dark focus:ring-opacity-50 transition-colors duration-200 text-sm font-medium shadow-sm whitespace-nowrap"
+                                                >
+                                                    Multiple Payment
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : !showDiscount || !showTax ? (
+                                <div className="flex items-center gap-2 min-w-[200px]">
+                                    <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                        {advanceDue > 0 ? "Due" : "Return"}{" "}
+                                        Amount:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={advanceDue.toFixed(2)}
+                                        readOnly
+                                        className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                        aria-label="Advance or Due Amount"
+                                    />
+                                </div>
+                            ) : null}
+                        </div>
+
+                        {/* Third Column: Return Amount, Payment Method, Buttons */}
+                        <div className="flex flex-col gap-3">
+                            {showDiscount && showTax ? (
+                                <>
+                                    <div className="flex items-center gap-2 min-w-[200px]">
+                                        <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                            {advanceDue > 0 ? "Due" : "Return"}{" "}
+                                            Amount:
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={advanceDue.toFixed(2)}
+                                            readOnly
+                                            className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                            aria-label="Advance or Due Amount"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-2 min-w-[200px]">
+                                        <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                            Payment Method:
+                                        </label>
+                                        <div className="flex items-center gap-2 w-full">
+                                            <select
+                                                className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-surface-light dark:bg-surface-dark text-text dark:text-text-dark focus:ring-0 focus:border-primary dark:focus:border-primary-dark"
+                                                onChange={(e) =>
+                                                    setPaymentMethod(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                value={paymentMethod || ""}
+                                                aria-label="Payment Method"
+                                            >
+                                                <option value="">
+                                                    Select Payment Method
+                                                </option>
+                                                {bankOptions.map((bank) => (
+                                                    <option
+                                                        key={bank?.value}
+                                                        value={bank?.value}
+                                                    >
+                                                        {bank?.label ?? "N/A"}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {multiplePaymentMethod === 1 && (
+                                                <button
+                                                    onClick={
+                                                        handleMultiplePayment
+                                                    }
+                                                    className="inline-flex items-center px-2 py-1 bg-primary dark:bg-primary-dark text-white rounded-sm hover:bg-primary-dark dark:hover:bg-primary focus:ring-0 focus:ring-primary dark:focus:ring-primary-dark focus:ring-opacity-50 transition-colors duration-200 text-sm font-medium shadow-sm whitespace-nowrap"
+                                                >
+                                                    Multiple Payment
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : showDiscount || showTax ? (
+                                <div className="flex items-center gap-2 min-w-[200px]">
+                                    <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                        {advanceDue > 0 ? "Due" : "Return"}{" "}
+                                        Amount:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={advanceDue.toFixed(2)}
+                                        readOnly
+                                        className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                        aria-label="Advance or Due Amount"
+                                    />
+                                </div>
+                            ) : null}
+                            {/* <div className="flex items-center gap-2 min-w-[200px]">
+                                <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                    {advanceDue > 0 ? "Due" : "Return"} Amount:
+                                </label>
+                                <input
+                                    type="text"
+                                    value={advanceDue.toFixed(2)}
+                                    readOnly
+                                    className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-100 dark:bg-gray-700 text-text dark:text-text-dark focus:ring-0 cursor-not-allowed"
+                                    aria-label="Advance or Due Amount"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 min-w-[200px]">
+                                <label className="w-32 text-sm font-medium text-text dark:text-text-dark whitespace-nowrap">
+                                    Payment Method:
+                                </label>
+                                <div className="flex items-center gap-2 w-full">
+                                    <select
+                                        className="w-full py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-surface-light dark:bg-surface-dark text-text dark:text-text-dark focus:ring-0 focus:border-primary dark:focus:border-primary-dark"
+                                        onChange={(e) =>
+                                            setPaymentMethod(e.target.value)
+                                        }
+                                        value={paymentMethod || ""}
+                                        aria-label="Payment Method"
+                                    >
+                                        <option value="">
+                                            Select Payment Method
+                                        </option>
+                                        {bankOptions.map((bank) => (
+                                            <option
+                                                key={bank?.value}
+                                                value={bank?.value}
+                                            >
+                                                {bank?.label ?? "N/A"}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {multiplePaymentMethod === 1 && (
+                                        <button
+                                            onClick={handleMultiplePayment}
+                                            className="inline-flex items-center px-2 py-1 bg-primary dark:bg-primary-dark text-white rounded-sm hover:bg-primary-dark dark:hover:bg-primary focus:ring-0 focus:ring-primary dark:focus:ring-primary-dark focus:ring-opacity-50 transition-colors duration-200 text-sm font-medium shadow-sm whitespace-nowrap"
+                                        >
+                                            Multiple Payment
+                                        </button>
+                                    )}
+                                </div>
+                            </div> */}
+                            <div className="flex justify-end gap-4 mt-2">
+                                <button
+                                    onClick={handleDraftClick}
+                                    className="inline-flex items-center px-4 py-2 bg-gray-500 dark:bg-gray-600 text-white rounded-md hover:bg-gray-600 dark:hover:bg-gray-500 focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-600 focus:ring-opacity-50 transition-colors duration-200 text-sm font-medium shadow-sm"
+                                    aria-label="Save as Draft"
+                                >
+                                    <Icon
+                                        icon="mdi:content-save"
+                                        className="w-5 h-5 mr-2"
+                                    />
+                                    Draft
+                                </button>
+                                <button
+                                    onClick={handlePayClick}
+                                    className="inline-flex items-center px-4 py-2 bg-primary dark:bg-primary-dark text-white rounded-md hover:bg-primary-dark dark:hover:bg-primary focus:ring-2 focus:ring-primary dark:focus:ring-primary-dark focus:ring-opacity-50 transition-colors duration-200 text-sm font-medium shadow-sm"
+                                    aria-label="Pay"
+                                >
+                                    <Icon
+                                        icon="mdi:credit-card"
+                                        className="w-5 h-5 mr-2"
+                                    />
+                                    Pay
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <MultiplePaymentModal
+                isOpen={multiplePaymentModal}
+                onClose={handleMultiplePaymentModalClose}
+                banks={banks}
+                grandTotal={subTotal}
+                advanceDue={advanceDue}
+            />
+        </>
+    );
+};
+
+export default BillingSection;

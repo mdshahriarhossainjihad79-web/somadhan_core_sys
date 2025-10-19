@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+    @font-face {
+        font-family: 'Poppins';
+        src: url('/assets/fonts/poppins/Poppins-Regular.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+    }
+
+    @font-face {
+        font-family: 'Poppins';
+        src: url('/assets/fonts/poppins/Poppins-Bold.ttf') format('truetype');
+        font-weight: bold;
+        font-style: normal;
+    }
+
+    @font-face {
+        font-family: 'Poppins';
+        src: url('/assets/fonts/poppins/Poppins-Black.ttf') format('truetype');
+        font-weight: 900;
+        font-style: normal;
+    }
+
+    @font-face {
+        font-family: 'Poppins';
+        src: url('/assets/fonts/poppins/Poppins-Medium.ttf') format('truetype');
+        font-weight: 500;
+        font-style: normal;
+    }
+
+    @font-face {
+        font-family: "Orbitron";
+        src: url('/assets/fonts/Orbitron/static/Orbitron-Regular.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+    }
+
+    body {
+        font-family: "Poppins", sans-serif;
+        font-weight: 400;
+    }
+
+
+    @keyframes spin-slow {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .animate-spin-slow {
+        animation: spin-slow 4s linear infinite;
+    }
+
+    /* Hide number input spinners globally */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield;
+        /* Firefox */
+    }
+
+
+    @keyframes pulse-slow {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.85;
+        }
+    }
+
+    .animate-pulse-slow {
+        animation: pulse-slow 2s ease-in-out infinite;
+    }
+
+}
+
+.react-datepicker-wrapper {
+    @apply w-full z-50;
+}
+
+
+.react-datepicker {
+    @apply bg-surface-light dark:bg-surface-dark border-gray-300 dark:border-gray-600 text-text dark:text-text-dark z-50 font-poppins;
+}
+
+.react-datepicker__day,
+.react-datepicker__day-name,
+.react-datepicker__month-text,
+.react-datepicker__quarter-text,
+.react-datepicker__year-text {
+    @apply font-poppins text-sm;
+}
+
+.react-datepicker__header {
+    @apply bg-surface-light dark:bg-surface-dark text-text dark:text-text-dark border-gray-300 dark:border-gray-600 z-50;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+    @apply bg-primary text-white dark:bg-primary-dark dark:text-text-dark font-poppins font-medium;
+}
+
+.react-datepicker__day:hover {
+    @apply bg-primary text-white dark:bg-primary-dark dark:text-text-dark font-poppins;
+}
+
+.react-datepicker__navigation {
+    @apply text-text dark:text-text-dark;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__month-year-read-view--selected-month {
+    @apply font-poppins font-medium text-text dark:text-text-dark;
+}
+
+.react-datepicker__month-dropdown,
+.react-datepicker__year-dropdown {
+    @apply bg-surface-light dark:bg-surface-dark text-text dark:text-text-dark font-poppins border border-gray-300 dark:border-gray-600 rounded-md shadow-md;
+}
+
+.react-datepicker__month-select,
+.react-datepicker__year-select {
+    @apply w-full py-1 px-2 text-xs bg-surface-light dark:bg-surface-dark text-text dark:text-text-dark font-poppins rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary-dark;
+}
