@@ -51,7 +51,7 @@ class UserSeed extends Seeder
                 'email' => 'tecadmin@gmail.com',
                 'phone' => '1234538',
                 'branch_id' => 1,
-                'password' => Hash::make('eil12345'),
+                'password' => Hash::make('123456'),
                 'role' => 'superadmin',
             ],
         ];

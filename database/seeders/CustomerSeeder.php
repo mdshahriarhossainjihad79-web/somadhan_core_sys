@@ -13,7 +13,7 @@ class CustomerSeeder extends Seeder
     public function run(): void
     {
         Customer::create([
-            'name' => 'Default',
+            'name' => 'Walking Customer',
             'branch_id' => 1,
             'email' => 'default@gmail.com',
             'phone' => '017....',

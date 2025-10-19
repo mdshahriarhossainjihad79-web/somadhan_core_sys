@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             RoleHasPermission::class,
             ModelHasRolesSeeder::class,
-            // BankSeeder::class,
+            BankSeeder::class,
             // CategorySeeder::class,
             // SizeSeeder::class,
             // UnitSeeder::class,

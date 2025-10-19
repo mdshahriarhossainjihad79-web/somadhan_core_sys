@@ -13,8 +13,8 @@ class CompanySeeder extends Seeder
     public function run(): void
     {
         Company::create([
-            'name' => 'Eclipse Electro POS',
-            'slug' => 'eclipse-electro-pos',
+            'name' => 'Somadhan Tenant 01',
+            'slug' => 'somadhan-tenant-01',
         ]);
     }
 }
