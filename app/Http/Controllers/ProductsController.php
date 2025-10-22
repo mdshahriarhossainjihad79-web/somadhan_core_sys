@@ -258,7 +258,7 @@ class ProductsController extends Controller
     public function getData(Request $request)
     {
 
-        $products = Product::with(['category', 'brand', 'productUnit', 'subcategory', 'defaultVariations', 'defaultVariations.variationSize'])
+        $products = Product::where('product_type', 'own_goods')->with(['category', 'brand', 'productUnit', 'subcategory', 'defaultVariations', 'defaultVariations.variationSize'])
             ->withSum('stockQuantity', 'stock_quantity')
             ->latest()->get();
         // dd($products[0]->defaultVariations->barcode);
@@ -366,6 +366,123 @@ class ProductsController extends Controller
         }
 
         return view('pos.products.product.product-show');
+    }
+
+    public function viewViaProduct()
+    {
+        return view('pos.products.product.via-product-show');
+    }
+    public function getViaData(Request $request)
+    {
+
+        $products = Product::where('product_type', 'via_goods')->with(['category', 'brand', 'productUnit', 'subcategory', 'defaultVariations', 'defaultVariations.variationSize'])
+            ->withSum('stockQuantity', 'stock_quantity')
+            ->latest()->get();
+        // dd($products[0]->defaultVariations->barcode);
+        // Check if the request is an AJAX call (DataTables request)
+        if ($request->ajax()) {
+            // dd($products->toArray());
+            return DataTables::of($products)
+                ->addColumn('image', function ($product) {
+                    // Get the image from the first variation, or use a default image
+                    $variationImage = $product->defaultVariations->image ?? null;
+
+                    // Build the image URL using the 'uploads/product/' path
+                    $imagePath = public_path('uploads/products/' . $variationImage);
+                    $imageUrl = (! empty($variationImage) && file_exists($imagePath))
+                        ? asset('uploads/products/' . $variationImage)
+                        : asset('dummy/image.jpg');
+
+                    return '<img src="' . $imageUrl . '" alt="Variation Image" style="width: 50px; height: auto;">';
+                })
+                ->addColumn('barcode', function ($product) {
+                    return $product->defaultVariations ? $product->defaultVariations->barcode : 'N/A'; // Handle null values
+                })
+                ->addColumn('brand_name', function ($product) {
+                    return $product->brand ? $product->brand->name : 'N/A'; // Show brand name
+                })
+                // Adding the column for subcategory name
+                ->addColumn('subcategory_name', function ($product) {
+                    return $product->subcategory ? $product->subcategory->name : 'N/A'; // Add subcategory name
+                })
+                // Adding the column for cost price
+                ->addColumn('cost_price', function ($product) {
+                    return $product->defaultVariations ? $product->defaultVariations->cost_price : 'N/A'; // Handle null values
+                })
+                ->addColumn('color', function ($product) {
+                    $variations = $product->variations;
+
+                    if ($variations->isEmpty()) {
+                        return 'N/A';
+                    }
+
+                    $colorCount = $variations->filter(function ($variation) {
+                        return ! is_null($variation->colorName);
+                    })->groupBy('colorName')->count();
+
+                    return $colorCount > 0 ? $colorCount . ' Colors available' : 'N/A';
+                })
+                // Adding the column for b2b price
+                ->addColumn('b2b_price', function ($product) {
+                    return $product->defaultVariations ? $product->defaultVariations->b2b_price : 'N/A'; // Handle null values
+                })
+                // Adding the column for b2c price
+                ->addColumn('b2c_price', function ($product) {
+                    return $product->defaultVariations ? $product->defaultVariations->b2c_price : 'N/A'; // Handle null values
+                })
+                // Adding the column for size name
+                ->addColumn('size_name', function ($product) {
+                    return $product->defaultVariations && $product->defaultVariations->variationSize ? $product->defaultVariations->variationSize->size : 'N/A';
+                })
+                ->addColumn('product_name', function ($product) {
+                    $name = '<a href="' . route('product.ledger', $product->id) . '" >' . htmlspecialchars($product->name) . '</a>';
+
+                    return $name;
+                })
+
+                // Adding the column for unit name
+                ->addColumn('unit_name', function ($product) {
+                    // foreach($product->variations as $variation) {
+                    // $abc =   $variation->stockQuantity->sum('stock_quantity');
+
+                    // }
+                    return $product->productUnit ? $product->productUnit->name : 'N/A'; // Handle null values
+                })
+                ->addColumn('quantity', function ($product) {
+                    return $product->stockQuantity->sum('stock_quantity');
+                })
+                ->addColumn('action', function ($product) {
+                    // $status = $product->defaultVariations ? ($product->defaultVariations->productStatus ?? 'N/A') : 'N/A';
+                    // $buttonClass = $status === 'active' ? 'btn-success' : 'btn-danger';
+                    // $productStatus = '<button type="button" class="btn btn-sm ' . $buttonClass . ' toggle-status-btn" data-id="' . $product->id . '" data-status="' . $status . '">' . $status . '</button>';
+                    $status = $product->variations->isNotEmpty()
+                        ? ($product->variations->contains('productStatus', 'active') ? 'active' : 'inactive')
+                        : 'N/A';
+                    $buttonClass = $status === 'active' ? 'btn-success' : ($status === 'inactive' ? 'btn-danger' : 'btn-secondary');
+                    $productStatus = $status !== 'N/A'
+                        ? '<button type="button" class="btn btn-sm ' . $buttonClass . ' toggle-status-btn" data-id="' . $product->id . '" data-status="' . $status . '">' . $status . '</button>'
+                        : 'N/A';
+                    $viewBtn = '<a href="' . route('product.ledger', $product->id) . '" class="btn btn-sm btn-success">View</a>';
+                    $barcodeBtn = "<a href='#' data-id='{$product->id}' class='btn btn-sm btn-info barcode-print-btn'>Barcode</a>";
+                    $editBtn = '';
+                    if (Auth::user()->can('products.edit')) {
+                        $editBtn = '<a href="' . route('product.edit', $product->id) . '" class="btn btn-sm btn-primary">Edit</a>';
+                    }
+                    // $deleteBtn = '';
+                    // if (Auth::user()->can('products.delete')) {
+                    //     $deleteBtn = '<a href="'.route('product.destroy', $product->id).'" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure?\')">Delete</a>';
+                    // }
+                    $deleteBtn = Auth::user()->can('products.delete')
+                        ? '<a href="javascript:void(0);" class="btn btn-sm btn-danger" onclick="confirmDelete(' . $product->id . ')">Delete</a>'
+                        : '';
+
+                    return $viewBtn . ' ' . $editBtn . ' ' . $deleteBtn . ' ' . $barcodeBtn . ' ' . $productStatus; // Concatenating the buttons
+                })
+                ->rawColumns(['product_name', 'image', 'action']) // Allow HTML in 'image' and 'action' columns
+                ->make(true);
+        }
+
+        return view('pos.products.product.via-product-show');
     }
 
     public function productStatus($id)

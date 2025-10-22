@@ -30,7 +30,7 @@ const Invoice = ({ setIsReady }) => {
     }, [logo, setIsReady]);
 
     return (
-        <div className="min-h-screen bg-white text-gray-800 font-sans text-sm ">
+        <div className="min-h-screen bg-white text-gray-800 font-sans">
             <Head title={`Sale Invoice-${sale?.invoice_number}`} />
             <div
                 className={cn("max-w-2xl mx-auto py-6 relative print-invoice")}
@@ -79,18 +79,18 @@ const Invoice = ({ setIsReady }) => {
                                 EIL<span className="text-blue-600">POS</span>
                             </a>
                         )}
-                        <p className="max-w-[200px] text-xs leading-tight mt-2">
+                        <p className="max-w-[200px] text-sm leading-tight mt-2">
                             {address}
                         </p>
-                        <p className="text-xs leading-tight">{phone}</p>
-                        <p className="text-xs leading-tight">{email}</p>
-                        <p className="mt-2 text-xs leading-tight">
+                        <p className="text-sm leading-tight">{phone}</p>
+                        <p className="text-sm leading-tight">{email}</p>
+                        <p className="mt-2 text-sm leading-tight">
                             <span className="font-semibold">
                                 Customer Name:
                             </span>{" "}
                             <b>{customer?.name ?? ""}</b>
                         </p>
-                        <p className="text-xs leading-tight">
+                        <p className="text-sm leading-tight">
                             <span className="font-semibold">Phone:</span>{" "}
                             {customer?.phone ?? ""}
                         </p>
@@ -102,27 +102,27 @@ const Invoice = ({ setIsReady }) => {
                         <h6 className="mb-0 text-sm">
                             # INV-{sale?.invoice_number ?? 0}
                         </h6>
-                        <h6 className="text-xs font-medium border-gray-500 inline-block">
+                        <h6 className="text-sm font-medium border-gray-500 inline-block">
                             <strong>Invoice by:</strong>{" "}
                             {sale?.sale_by?.name ?? "N/A"}
                         </h6>
 
                         {sale?.due > 0 ? (
                             <>
-                                <p className="mb-1 mt-4 text-xs">Due</p>
+                                <p className="mb-1 mt-4 text-sm">Due</p>
                                 <h4 className="font-normal text-red-600 text-base">
                                     ৳ {Number(sale?.due ?? 0).toFixed(2)}
                                 </h4>
                             </>
                         ) : (
                             <>
-                                <p className="mb-1 mt-4 text-xs">Total Paid</p>
+                                <p className="mb-1 mt-4 text-sm">Total Paid</p>
                                 <h4 className="font-normal text-green-600 text-base">
                                     ৳ {Number(sale?.paid ?? 0).toFixed(2)}
                                 </h4>
                             </>
                         )}
-                        <h6 className="mt-2 text-xs">
+                        <h6 className="mt-2 text-sm">
                             <span className="text-gray-500">Invoice Date:</span>{" "}
                             {sale?.sale_date ?? ""}
                         </h6>
@@ -140,39 +140,39 @@ const Invoice = ({ setIsReady }) => {
                         {/* Removed border from table to apply it individually */}
                         <thead className="bg-blue-400 text-black">
                             <tr>
-                                <th className="py-1 px-2 text-left text-xs font-semibold border border-blue-400">
+                                <th className="py-1 px-2 text-left text-sm font-semibold border border-blue-400">
                                     #
                                 </th>
-                                <th className="py-1 px-2 text-left text-xs font-semibold border border-blue-400">
+                                <th className="py-1 px-2 text-left text-sm font-semibold border border-blue-400">
                                     Product Name
                                 </th>
                                 {color_view === 1 && (
-                                    <th className="py-1 px-2 text-left text-xs font-semibold border border-blue-400">
+                                    <th className="py-1 px-2 text-left text-sm font-semibold border border-blue-400">
                                         Color
                                     </th>
                                 )}
                                 {size_view === 1 && (
-                                    <th className="py-1 px-2 text-left text-xs font-semibold border border-blue-400">
+                                    <th className="py-1 px-2 text-left text-sm font-semibold border border-blue-400">
                                         Size
                                     </th>
                                 )}
                                 {warranty === 1 && (
-                                    <th className="py-1 px-2 text-right text-xs font-semibold border border-blue-400">
+                                    <th className="py-1 px-2 text-right text-sm font-semibold border border-blue-400">
                                         Warranty
                                     </th>
                                 )}
-                                <th className="py-1 px-2 text-right text-xs font-semibold border border-blue-400">
+                                <th className="py-1 px-2 text-right text-sm font-semibold border border-blue-400">
                                     Unit Cost
                                 </th>
-                                <th className="py-1 px-2 text-right text-xs font-semibold border border-blue-400">
+                                <th className="py-1 px-2 text-right text-sm font-semibold border border-blue-400">
                                     Quantity
                                 </th>
                                 {sale_hands_on_discount === 1 && (
-                                    <th className="py-1 px-2 text-right text-xs font-semibold border border-blue-400">
+                                    <th className="py-1 px-2 text-right text-sm font-semibold border border-blue-400">
                                         Discount
                                     </th>
                                 )}
-                                <th className="py-1 px-2 text-right text-xs font-semibold border border-blue-400">
+                                <th className="py-1 px-2 text-right text-sm font-semibold border border-blue-400">
                                     Total
                                 </th>
                             </tr>
@@ -185,44 +185,44 @@ const Invoice = ({ setIsReady }) => {
                                             key={index}
                                             className="text-right hover:bg-gray-50"
                                         >
-                                            <td className="py-1 px-2 text-left text-xs border border-blue-400">
+                                            <td className="py-1 px-2 text-left text-sm border border-blue-400">
                                                 {index + 1}
                                             </td>
-                                            <td className="py-1 px-2 text-left text-xs border border-blue-400">
+                                            <td className="py-1 px-2 text-left text-sm border border-blue-400">
                                                 {product?.product?.name ?? ""}
                                             </td>
                                             {color_view === 1 && (
-                                                <td className="py-1 px-2 text-left text-xs border border-blue-400">
+                                                <td className="py-1 px-2 text-left text-sm border border-blue-400">
                                                     {product?.variant
                                                         ?.color_name?.name ??
                                                         "N/A"}
                                                 </td>
                                             )}
                                             {size_view === 1 && (
-                                                <td className="py-1 px-2 text-left text-xs border border-blue-400">
+                                                <td className="py-1 px-2 text-left text-sm border border-blue-400">
                                                     {product?.variant
                                                         ?.variation_size
                                                         ?.size ?? "N/A"}
                                                 </td>
                                             )}
                                             {warranty === 1 && (
-                                                <td className="py-1 px-2 text-xs border border-blue-400">
+                                                <td className="py-1 px-2 text-sm border border-blue-400">
                                                     {product?.warranty
                                                         ?.duration ?? "N/A"}
                                                 </td>
                                             )}
-                                            <td className="py-1 px-2 text-xs border border-blue-400">
+                                            <td className="py-1 px-2 text-sm border border-blue-400">
                                                 {product?.rate ?? 0}
                                             </td>
-                                            <td className="py-1 px-2 text-xs border border-blue-400">
+                                            <td className="py-1 px-2 text-sm border border-blue-400">
                                                 {product?.qty ?? 0}
                                             </td>
                                             {sale_hands_on_discount === 1 && (
-                                                <td className="py-1 px-2 text-xs border border-blue-400">
+                                                <td className="py-1 px-2 text-sm border border-blue-400">
                                                     {product?.discount ?? 0}
                                                 </td>
                                             )}
-                                            <td className="py-1 px-2 text-xs border border-blue-400">
+                                            <td className="py-1 px-2 text-sm border border-blue-400">
                                                 {product?.sub_total ?? 0}
                                             </td>
                                         </tr>
@@ -237,7 +237,7 @@ const Invoice = ({ setIsReady }) => {
                                             key={i + products.length}
                                             className="text-left"
                                         >
-                                            <td className="py-1 px-2 text-xs border border-blue-400">
+                                            <td className="py-1 px-2 text-sm border border-blue-400">
                                                 {i + products.length + 1}
                                             </td>
                                             <td className="py-1 px-2 border border-blue-400"></td>
@@ -263,7 +263,7 @@ const Invoice = ({ setIsReady }) => {
                                 <tr className="text-center">
                                     <td
                                         colSpan="8"
-                                        className="py-2 px-2 text-xs border border-blue-400"
+                                        className="py-2 px-2 text-sm border border-blue-400"
                                     >
                                         Data Not Found
                                     </td>
@@ -283,12 +283,12 @@ const Invoice = ({ setIsReady }) => {
                                             {sale?.additional_charges.map(
                                                 (charge, i) => (
                                                     <tr key={i}>
-                                                        <td className="py-1 text-xs">
+                                                        <td className="py-1 text-sm">
                                                             {charge
                                                                 ?.additional_charge_name
                                                                 ?.name ?? "N/A"}
                                                         </td>
-                                                        <td className="py-1 text-right text-xs">
+                                                        <td className="py-1 text-right text-sm">
                                                             ৳{" "}
                                                             {charge?.amount ??
                                                                 0}
@@ -305,16 +305,16 @@ const Invoice = ({ setIsReady }) => {
                             <table className="w-full">
                                 <tbody>
                                     <tr>
-                                        <td className="py-1 text-xs">
+                                        <td className="py-1 text-sm">
                                             Product Total
                                         </td>
-                                        <td className="py-1 text-right text-xs">
+                                        <td className="py-1 text-right text-sm">
                                             ৳ {sale?.product_total ?? 0}
                                         </td>
                                     </tr>
                                     {sale?.actual_discount > 0 && (
                                         <tr>
-                                            <td className="py-1 text-xs">
+                                            <td className="py-1 text-sm">
                                                 Discount{" "}
                                                 {sale?.discount_type === "fixed"
                                                     ? ""
@@ -322,17 +322,17 @@ const Invoice = ({ setIsReady }) => {
                                                           sale?.discount
                                                       )}%)`}
                                             </td>
-                                            <td className="py-1 text-right text-xs">
+                                            <td className="py-1 text-right text-sm">
                                                 ৳ {sale?.actual_discount}
                                             </td>
                                         </tr>
                                     )}
                                     {tax === 1 && (
                                         <tr>
-                                            <td className="py-1 text-xs">
+                                            <td className="py-1 text-sm">
                                                 TAX ({parseInt(sale?.tax)}%)
                                             </td>
-                                            <td className="py-1 text-right text-xs">
+                                            <td className="py-1 text-right text-sm">
                                                 ৳{" "}
                                                 {Number(
                                                     (sale?.product_total *
@@ -346,18 +346,18 @@ const Invoice = ({ setIsReady }) => {
                                     {sale?.additional_charge_total > 0 ? (
                                         <>
                                             <tr>
-                                                <td className="py-1 font-semibold text-xs">
+                                                <td className="py-1 font-semibold text-sm">
                                                     Invoice Total
                                                 </td>
-                                                <td className="py-1 font-semibold text-right text-xs">
+                                                <td className="py-1 font-semibold text-right text-sm">
                                                     ৳ {sale?.invoice_total ?? 0}
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td className="py-1 font-semibold text-xs">
+                                                <td className="py-1 font-semibold text-sm">
                                                     Additional Charge
                                                 </td>
-                                                <td className="py-1 font-semibold text-right text-xs">
+                                                <td className="py-1 font-semibold text-right text-sm">
                                                     ৳{" "}
                                                     {sale?.additional_charge_total ??
                                                         0}
@@ -367,10 +367,10 @@ const Invoice = ({ setIsReady }) => {
                                     ) : null}
 
                                     <tr>
-                                        <td className="py-1 font-semibold text-xs">
+                                        <td className="py-1 font-semibold text-sm">
                                             Grand Total
                                         </td>
-                                        <td className="py-1 font-semibold text-right text-xs">
+                                        <td className="py-1 font-semibold text-right text-sm">
                                             ৳{" "}
                                             {Number(
                                                 sale?.grand_total ?? 0
@@ -378,18 +378,18 @@ const Invoice = ({ setIsReady }) => {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="py-1 text-xs">Paid</td>
-                                        <td className="py-1 text-green-600 text-right text-xs">
+                                        <td className="py-1 text-sm">Paid</td>
+                                        <td className="py-1 text-green-600 text-right text-sm">
                                             ৳{" "}
                                             {Number(sale?.paid ?? 0).toFixed(2)}
                                         </td>
                                     </tr>
                                     {sale?.due > 0 ? (
                                         <tr>
-                                            <td className="py-1 font-semibold text-xs">
+                                            <td className="py-1 font-semibold text-sm">
                                                 Due
                                             </td>
-                                            <td className="py-1 font-semibold text-red-600 text-right text-xs">
+                                            <td className="py-1 font-semibold text-red-600 text-right text-sm">
                                                 ৳{" "}
                                                 {Number(sale?.due ?? 0).toFixed(
                                                     2
@@ -398,10 +398,10 @@ const Invoice = ({ setIsReady }) => {
                                         </tr>
                                     ) : (
                                         <tr>
-                                            <td className="py-1 font-semibold text-xs">
+                                            <td className="py-1 font-semibold text-sm">
                                                 Change Amount
                                             </td>
-                                            <td className="py-1 font-semibold text-right text-xs">
+                                            <td className="py-1 font-semibold text-right text-sm">
                                                 ৳{" "}
                                                 {Number(
                                                     Math.abs(
@@ -420,14 +420,14 @@ const Invoice = ({ setIsReady }) => {
                     {invoice_type === "a4" || invoice_type === "a5" ? (
                         <button
                             onClick={() => window.print()}
-                            className="print-button bg-blue-600 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-700 transition-colors"
+                            className="print-button bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 transition-colors"
                         >
                             <i className="fas fa-print mr-1"></i>Print Invoice
                         </button>
                     ) : (
                         <a
                             href={`/sale/print/${sale?.id}`}
-                            className="print-button bg-blue-600 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-700 transition-colors"
+                            className="print-button bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 transition-colors"
                         >
                             <i className="fas fa-print mr-1"></i>Print Invoice
                         </a>

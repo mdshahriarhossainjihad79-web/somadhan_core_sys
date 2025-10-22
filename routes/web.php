@@ -222,6 +222,8 @@ Route::middleware('auth')->group(function () {
         // Route::post('/product/store', 'store')->name('product.store');
         Route::get('/product/all/view', 'view')->name('product.all.view');
         Route::get('/product/view', 'getData')->name('product.view');
+        Route::get('/product-via/view', 'getViaData')->name('via.product.view');
+        Route::get('/product-via/all/view', 'viewViaProduct')->name('via.product.view.all');
         // Route::get('/product/edit/{id}', 'edit')->name('product.edit');
         // Route::post('/product/update/{id}', 'update')->name('product.update');
         // Route::get('/product/destroy/{id}', 'destroy')->name('product.destroy');
